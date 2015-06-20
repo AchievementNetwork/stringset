@@ -3,8 +3,10 @@
 // for intersections.
 //
 // Negative sets are useful for inverting the sense of a set when combining them
-// using Intersection. Negative sets do not change the operation of any other
-// set operations, including Union and Difference.
+// using Intersection. Negative sets do not change the behavior of any other
+// set operations, including Union and Difference.  Negative operations were created
+// for managing a set of tags, where it is useful to be able to search for items
+// that contain some tags but do not contain others.
 //
 // The API is designed to be chainable so that common operations become one-liners,
 // and it is designed to be easy to use with slices of strings.
