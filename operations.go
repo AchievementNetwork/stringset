@@ -4,7 +4,7 @@ package stringset
 func (ss *StringSet) Clone() *StringSet {
 	clone := New()
 	for k := range ss.content {
-		clone.content[k] = true
+		clone.content[k] = ss.content[k]
 	}
 	clone.IsNegative = ss.IsNegative
 	return clone

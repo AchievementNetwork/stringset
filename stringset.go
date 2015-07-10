@@ -16,17 +16,20 @@
 // that don't exist are not errors.
 package stringset
 
-// A StringSet is implemented using a map[string]bool -- strings are copied
+// this is an empty object that takes up no space
+type nothing struct{}
+
+// A StringSet is implemented using a map[string]nothing -- strings are copied
 // when added to the set.
 type StringSet struct {
 	IsNegative bool
-	content    map[string]bool
+	content    map[string]nothing
 }
 
 // New constructs an empty StringSet.
 func New() *StringSet {
 	ss := new(StringSet)
-	ss.content = make(map[string]bool)
+	ss.content = make(map[string]nothing)
 	return ss
 }
 
@@ -40,7 +43,7 @@ func (ss *StringSet) Negate() *StringSet {
 // If a string is already present the set is unchanged.
 func (ss *StringSet) Add(sa ...string) *StringSet {
 	for _, s := range sa {
-		ss.content[s] = true
+		ss.content[s] = nothing{}
 	}
 	return ss
 }
