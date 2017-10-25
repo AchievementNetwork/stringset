@@ -109,3 +109,16 @@ func (ss *StringSet) Equals(ss2 *StringSet) bool {
 	}
 	return true
 }
+
+// Filter returns a new StringSet that contains only the members of
+// the original set where f(member) evaluates to true.
+// Negate has no effect.
+func (ss *StringSet) Filter(f func(s string) bool) *StringSet {
+	filtered := New()
+	for k := range ss.content {
+		if ok := f(k); ok {
+			filtered.Add(k)
+		}
+	}
+	return filtered
+}
