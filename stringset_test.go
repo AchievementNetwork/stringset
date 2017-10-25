@@ -1,6 +1,7 @@
 package stringset
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -84,6 +85,42 @@ func TestNegate12(t *testing.T) {
 	ss2 := New().Add("c", "d", "e").Negate()
 	pn := ss1.Intersection(ss2)
 	assert.True(t, pn.Equals(New().Add("a", "b", "c", "d", "e")))
+}
+
+func TestFilter1(t *testing.T) {
+	ss1 := New().Add("a", "b", "c", "d", "e")
+	f := func(s string) bool {
+		return strings.Contains("bd", s)
+	}
+	ss2 := ss1.Filter(f)
+	assert.True(t, ss2.Equals(New().Add("d", "b")))
+}
+
+func TestFilter2(t *testing.T) {
+	ss1 := New().Add("a", "b", "c", "d", "e").Negate()
+	f := func(s string) bool {
+		return true
+	}
+	ss2 := ss1.Filter(f)
+	assert.True(t, ss2.Equals(New().Add("a", "b", "c", "d", "e")))
+}
+
+func TestFilter3(t *testing.T) {
+	ss1 := New().Add("a", "b", "c", "d", "e")
+	f := func(s string) bool {
+		return false
+	}
+	ss2 := ss1.Filter(f)
+	assert.Equal(t, 0, ss2.Length())
+}
+
+func TestFilter4(t *testing.T) {
+	ss1 := New().Add(strings.Split("This is a test of whatever this says it is", " ")...)
+	f := func(s string) bool {
+		return strings.Contains(s, "is")
+	}
+	ss2 := ss1.Filter(f)
+	assert.True(t, ss2.Equals(New().Add("This", "this", "is")))
 }
 
 // This performs an equivalence test for two string slices
