@@ -1,0 +1,21 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/AchievementNetwork/stringset
+    steps:
+      - checkout
+      - run:
+          name: Verify Docker Works
+          command: |
+            docker --version
+      - run:
+          name: Dependencies
+          command: |
+            go get github.com/Masterminds/glide
+            glide install
+      - run:
+          name: Test
+          command: go test -race -v $(glide novendor)
