@@ -1,6 +1,6 @@
 module github.com/AchievementNetwork/stringset
 
-go 1.21.1
+go 1.22
 
 require (
 	github.com/golangci/golangci-lint v1.57.1
