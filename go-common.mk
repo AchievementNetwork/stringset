@@ -36,6 +36,7 @@ GOTESTENV ?=
 GOTESTCOVERRAW ?= coverage.raw
 GOTESTCOVERHTML ?= coverage.html
 GOLINTFLAGS ?= --timeout 5m
+GOLINTERIMPORTPATH ?= github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # Default output directory for executables and associated (copied) files
 BUILDDIR ?= build
@@ -119,10 +120,16 @@ lint:: pre-lint standard-lint post-lint
 
 pre-lint::
 
-standard-lint::
-	go mod why github.com/golangci/golangci-lint/cmd/golangci-lint 2> /dev/null | ( ! grep "does not need package" > /dev/null 2>&1 ) || \
-		(echo "!!!!! golangci-lint is not installed in your go module - please add it in a suitable tools.go file. For example, see here: https://github.com/AchievementNetwork/quiz-api/blob/main/tools.go"; exit 1)
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint run $(GOLINTFLAGS)
+standard-lint:: generate
+	$(GO) mod why $(GOLINTERIMPORTPATH) 2> /dev/null | \
+		tail -1 | grep '^$(GOLINTERIMPORTPATH)$$' 2>&1 > /dev/null || \
+		( if [ -f tools.go ]; then \
+			eval "$$_common_make_tools_lint_help"; \
+		  else \
+			eval "$$_common_make_no_tools_lint_help"; \
+		  fi; \
+		  exit 1 )
+	$(GO) run github.com/golangci/golangci-lint/cmd/golangci-lint run $(GOLINTFLAGS)
 
 post-lint::
 
@@ -131,7 +138,7 @@ test:: pre-test standard-test post-test
 
 pre-test::
 
-standard-test::
+standard-test:: generate
 	$(GOTESTENV) $(GO) test $(GOTESTFLAGS) $(GOTESTTARGET)
 
 post-test::
@@ -140,7 +147,7 @@ testcover:: pre-testcover standard-testcover post-testcover
 
 pre-testcover::
 
-standard-testcover:: $(GOTESTCOVERHTML)
+standard-testcover:: generate $(GOTESTCOVERHTML)
 
 post-testcover::
 
@@ -192,3 +199,38 @@ $(_GO_BUILD_TARGETS): $(GOSRC) generate
 
 # Print the value of a variable
 _printvar-go-%: ; @echo $($*)
+
+# Lint-related messages
+define __common_make_no_tools_lint_help
+cat <<EOF
+No dependency on golangci-lint found!
+
+Please create a top level tools.go file with contents like
+
+-
+//go:build tools
+// +build tools
+
+package tools
+
+import _ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+-
+
+(the package may need adjusting) and then run 'go mod tidy'.
+
+Then commit the new file and changes to 'go.mod' and 'go.sum'.
+EOF
+endef
+export _common_make_no_tools_lint_help = $(value __common_make_no_tools_lint_help)
+
+define __common_make_tools_lint_help
+cat <<EOF
+No dependency on golangci-lint found!
+
+Please add an import of "github.com/golangci/golangci-lint/cmd/golangci-lint"
+to the tools.go file and then run 'go mod tidy'.
+
+Then commit the changes to the file and changes to 'go.mod' and 'go.sum'.
+EOF
+endef
+export _common_make_tools_lint_help = $(value __common_make_tools_lint_help)
