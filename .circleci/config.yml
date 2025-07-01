@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  go: achievementnetwork/go@2.8.1
+  go: achievementnetwork/go@3.0.0
 
 workflows:
   version: 2
@@ -9,5 +9,5 @@ workflows:
     jobs:
       - go/build
       - go/lint
-      - go/test
+      - go/testcover
       - go/generate
