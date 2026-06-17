@@ -30,13 +30,15 @@ GODEBUG ?=
 GOBUILDFLAGS ?=
 GOBUILDENV ?=
 GORUNGENERATE ?= yes
+GOGENERATEENV ?=
 GOTESTTARGET ?= ./...
 GOTESTFLAGS ?= -race
+GOTEST ?= $(GO) test
 GOTESTENV ?=
 GOTESTCOVERRAW ?= coverage.raw
 GOTESTCOVERHTML ?= coverage.html
 GOLINTFLAGS ?= --timeout 5m
-GOLINTERIMPORTPATH ?= github.com/golangci/golangci-lint/cmd/golangci-lint
+GOLINTERIMPORTPATH ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 # Default output directory for executables and associated (copied) files
 BUILDDIR ?= build
@@ -110,7 +112,7 @@ pre-generate::
 
 standard-generate::
 ifdef GORUNGENERATE
-	$(GO) generate ./...
+	$(GOGENERATEENV) $(GO) generate ./...
 endif # GORUNGENERATE
 
 post-generate::
@@ -129,7 +131,7 @@ standard-lint:: generate
 			eval "$$_common_make_no_tools_lint_help"; \
 		  fi; \
 		  exit 1 )
-	$(GO) run github.com/golangci/golangci-lint/cmd/golangci-lint run $(GOLINTFLAGS)
+	$(GO) run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run $(GOLINTFLAGS)
 
 post-lint::
 
@@ -139,7 +141,7 @@ test:: pre-test standard-test post-test
 pre-test::
 
 standard-test:: generate
-	$(GOTESTENV) $(GO) test $(GOTESTFLAGS) $(GOTESTTARGET)
+	$(GOTESTENV) $(GOTEST) $(GOTESTFLAGS) $(GOTESTTARGET)
 
 post-test::
 
@@ -174,8 +176,10 @@ _commonupdate::
 # Names may change at any time
 
 # Test coverage files
-$(GOTESTCOVERRAW):
-	$(GOTESTENV) $(GO) test $(GOTESTFLAGS) -coverprofile=$@ $(GOTESTTARGET)
+$(GOTESTCOVERRAW): $(GOSRC)
+	$(GOTESTENV) $(GOTEST) $(GOTESTFLAGS) -coverprofile=cover.out.tmp $(GOTESTTARGET)
+	grep -v "fake_" cover.out.tmp > $@
+	rm cover.out.tmp
 
 $(GOTESTCOVERHTML): $(GOTESTCOVERRAW)
 	$(GO) tool cover -html=$< -o $@
@@ -213,7 +217,7 @@ Please create a top level tools.go file with contents like
 
 package tools
 
-import _ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+import _ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 -
 
 (the package may need adjusting) and then run 'go mod tidy'.
@@ -227,7 +231,7 @@ define __common_make_tools_lint_help
 cat <<EOF
 No dependency on golangci-lint found!
 
-Please add an import of "github.com/golangci/golangci-lint/cmd/golangci-lint"
+Please add an import of "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 to the tools.go file and then run 'go mod tidy'.
 
 Then commit the changes to the file and changes to 'go.mod' and 'go.sum'.
